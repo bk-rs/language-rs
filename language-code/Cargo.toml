@@ -1,0 +1,28 @@
+[package]
+name = "language-code"
+version = "0.1.0"
+authors = ["vkill <vkill.net@gmail.com>"]
+edition = "2021"
+description = "Language Code"
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/bk-rs/x-code-rs"
+homepage = "https://github.com/bk-rs/x-code-rs"
+documentation = "https://docs.rs/language-code"
+keywords = []
+categories = []
+readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = ["std"]
+std = ["country-code/std"]
+
+[dependencies]
+paste = { version = "1.0", default-features = false }
+country-code = { version = "0.1", default-features = false }
+serde = { version = "1.0", default-features = false, features = ["alloc"], optional = true }
+
+[dev-dependencies]
+csv = { version = "1.1" }
