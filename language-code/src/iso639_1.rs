@@ -320,11 +320,11 @@ mod tests {
 
         assert_eq!(
             "x-y".parse::<LanguageTag>().err().unwrap(),
-            crate::error::LanguageTagParseError::InvalidLanguageCode("x".into())
+            crate::error::LanguageTagParseError::LanguageCodeInvalid("x".into())
         );
         // assert_eq!(
         //     "en-y".parse::<LanguageTag>().err().unwrap(),
-        //     crate::error::LanguageTagParseError::InvalidCountryCode("y".into())
+        //     crate::error::LanguageTagParseError::CountryCodeInvalid("y".into())
         // );
 
         // PartialEq

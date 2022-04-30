@@ -18,8 +18,8 @@ impl std::error::Error for ParseError {}
 //
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LanguageTagParseError {
-    InvalidLanguageCode(::alloc::boxed::Box<str>),
-    InvalidCountryCode(::alloc::boxed::Box<str>),
+    LanguageCodeInvalid(::alloc::boxed::Box<str>),
+    CountryCodeInvalid(::alloc::boxed::Box<str>),
 }
 
 impl fmt::Display for LanguageTagParseError {

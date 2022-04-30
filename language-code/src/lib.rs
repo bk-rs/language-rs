@@ -153,12 +153,12 @@ macro_rules! language_tag {
                 let language_code_s = s.chars().take_while(|x| x != &'-' && x != &'_')
                                                 .collect::<$crate::alloc::string::String>();
                 let language_code = language_code_s.parse::<$language_code_ty>()
-                                                    .map_err(|_| $crate::error::LanguageTagParseError::InvalidLanguageCode(language_code_s.as_str().into()))?;
+                                                    .map_err(|_| $crate::error::LanguageTagParseError::LanguageCodeInvalid(language_code_s.as_str().into()))?;
 
                 let country_code = if s.len() > language_code_s.len() + 1 {
                     let country_code_s = &s[language_code_s.len() + 1..];
                     let country_code = country_code_s.parse::<$country_code_ty>()
-                                                    .map_err(|_| $crate::error::LanguageTagParseError::InvalidCountryCode(country_code_s.into()))?;
+                                                    .map_err(|_| $crate::error::LanguageTagParseError::CountryCodeInvalid(country_code_s.into()))?;
                     Some(country_code)
                 } else {
                     None
