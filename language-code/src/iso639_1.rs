@@ -322,10 +322,10 @@ mod tests {
             "x-y".parse::<LanguageTag>().err().unwrap(),
             crate::error::LanguageTagParseError::LanguageCodeInvalid("x".into())
         );
-        // assert_eq!(
-        //     "en-y".parse::<LanguageTag>().err().unwrap(),
-        //     crate::error::LanguageTagParseError::CountryCodeInvalid("y".into())
-        // );
+        assert_eq!(
+            "en-y".parse::<LanguageTag>().err().unwrap(),
+            crate::error::LanguageTagParseError::CountryCodeInvalid("y".into())
+        );
 
         // PartialEq
         assert_eq!(
