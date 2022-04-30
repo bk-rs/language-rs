@@ -5,7 +5,7 @@ use country_code::iso3166_1::alpha_2::CountryCode;
 use crate::{language_code, language_tag};
 
 language_code! {
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(Debug, Clone)]
     #[allow(non_camel_case_types)]
     pub enum LanguageCode {
         ab,
@@ -194,8 +194,15 @@ language_code! {
     }
 }
 
+//
+impl Default for LanguageCode {
+    fn default() -> Self {
+        Self::en
+    }
+}
+
 language_tag! {
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(Debug, Clone)]
     pub struct LanguageTag {
         pub language_code: LanguageCode,
         pub country_code: Option<CountryCode>,
@@ -218,6 +225,7 @@ mod tests {
 
     #[test]
     fn test_language_code() {
+        // Wikipedia
         let mut rdr = Reader::from_reader(
             include_str!("../tests/List_of_ISO_639-1_codes/list.csv").as_bytes(),
         );
@@ -232,10 +240,61 @@ mod tests {
         }
 
         assert_eq!(LanguageCode::VARS.len(), n);
+
+        // FromStr
+        assert_eq!(
+            "zz".parse::<LanguageCode>().unwrap(),
+            LanguageCode::Other("zz".into())
+        );
+        assert_eq!(
+            "x".parse::<LanguageCode>().err().unwrap(),
+            crate::error::ParseError::Invalid("x".into())
+        );
+        #[cfg(feature = "std")]
+        {
+            std::println!("{}", "x".parse::<LanguageCode>().err().unwrap());
+        }
+
+        // PartialEq
+        assert_eq!(LanguageCode::en, LanguageCode::en);
+        assert_eq!(LanguageCode::en, LanguageCode::Other("en".into()));
+        assert_eq!(LanguageCode::en, "en");
+
+        #[cfg(feature = "std")]
+        {
+            // Hash
+            let mut h = std::collections::HashSet::new();
+            h.insert(LanguageCode::en);
+            h.insert(LanguageCode::Other("en".into()));
+            assert_eq!(h.len(), 1);
+        }
+
+        #[cfg(feature = "serde")]
+        {
+            #[derive(serde::Serialize, serde::Deserialize)]
+            struct Foo {
+                code: LanguageCode,
+            }
+
+            assert_eq!(
+                serde_json::from_str::<Foo>(r#"{"code":"en"}"#)
+                    .unwrap()
+                    .code,
+                LanguageCode::en
+            );
+            assert_eq!(
+                serde_json::to_string(&Foo {
+                    code: LanguageCode::en
+                })
+                .unwrap(),
+                r#"{"code":"en"}"#
+            );
+        }
     }
 
     #[test]
     fn test_language_tag() {
+        // FromStr
         assert_eq!(
             "en".parse::<LanguageTag>().unwrap(),
             LanguageTag::new(LanguageCode::en, None)
@@ -254,5 +313,41 @@ mod tests {
             "zh-TW".parse::<LanguageTag>().unwrap(),
             LanguageTag::new(LanguageCode::zh, Some(CountryCode::TW))
         );
+
+        assert_eq!(
+            "x-y".parse::<LanguageTag>().err().unwrap(),
+            crate::error::LanguageTagParseError::InvalidLanguageCode("x".into())
+        );
+        // assert_eq!(
+        //     "en-y".parse::<LanguageTag>().err().unwrap(),
+        //     crate::error::LanguageTagParseError::InvalidCountryCode("y".into())
+        // );
+
+        // PartialEq
+        assert_eq!(
+            LanguageTag::new(LanguageCode::en, None),
+            LanguageTag::new(LanguageCode::en, None)
+        );
+        assert_eq!(LanguageTag::new(LanguageCode::en, None), "en");
+
+        #[cfg(feature = "serde")]
+        {
+            #[derive(serde::Serialize, serde::Deserialize)]
+            struct Foo {
+                tag: LanguageTag,
+            }
+
+            assert_eq!(
+                serde_json::from_str::<Foo>(r#"{"tag":"en"}"#).unwrap().tag,
+                LanguageTag::new(LanguageCode::en, None),
+            );
+            assert_eq!(
+                serde_json::to_string(&Foo {
+                    tag: LanguageTag::new(LanguageCode::en, None)
+                })
+                .unwrap(),
+                r#"{"tag":"en"}"#
+            );
+        }
     }
 }

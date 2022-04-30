@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-extern crate alloc;
+pub extern crate alloc;
 
 //
 #[macro_export]
@@ -9,6 +9,7 @@ macro_rules! language_code {
         $( #[$meta:meta] )*
         $pub:vis enum $name:ident {
             $(
+                $( #[$variant_meta:meta] )*
                 $variant:ident,
             )+
         }
@@ -16,9 +17,10 @@ macro_rules! language_code {
         $(#[$meta])*
         $pub enum $name {
             $(
+                $( #[$variant_meta] )*
                 $variant,
             )+
-            Other(::alloc::boxed::Box<str>),
+            Other($crate::alloc::boxed::Box<str>),
         }
 
         //
@@ -33,14 +35,15 @@ macro_rules! language_code {
         //
         paste::paste! {
             impl ::core::str::FromStr for $name {
-                type Err = ::core::convert::Infallible;
+                type Err = $crate::error::ParseError;
 
                 fn from_str(s: &str) -> Result<Self, Self::Err> {
                     match s {
                         $(
                             ::core::stringify!($variant) | ::core::stringify!([<$variant:upper>]) => Ok(Self::$variant),
                         )+
-                        s => Ok(Self::Other(s.into()))
+                        s if s.len() == 2 => Ok(Self::Other(s.into())),
+                        s => Err($crate::error::ParseError::Invalid(s.into()))
                     }
                 }
             }
@@ -59,9 +62,26 @@ macro_rules! language_code {
         }
 
         //
-        impl ::core::default::Default for $name {
-            fn default() -> Self {
-                Self::en
+        impl ::core::cmp::PartialEq for $name {
+            fn eq(&self, other: &Self) -> bool {
+                $crate::alloc::format!("{}", self) == $crate::alloc::format!("{}", other)
+            }
+        }
+
+        impl ::core::cmp::Eq for $name {
+        }
+
+        //
+        impl_macros::impl_partial_eq_str_for_display! { str, $name }
+        impl_macros::impl_partial_eq_str_for_display! { &'a str, $name }
+        impl_macros::impl_partial_eq_str_for_display! { $crate::alloc::borrow::Cow<'a, str>, $name }
+        impl_macros::impl_partial_eq_str_for_display! { $crate::alloc::string::String, $name }
+
+        //
+        #[cfg(feature = "std")]
+        impl ::std::hash::Hash for $name {
+            fn hash<H: ::std::hash::Hasher>(&self, state: &mut H) {
+                $crate::alloc::format!("{}", self).hash(state);
             }
         }
 
@@ -74,7 +94,7 @@ macro_rules! language_code {
             {
                 use ::core::str::FromStr as _;
 
-                let s = ::alloc::boxed::Box::<str>::deserialize(deserializer)?;
+                let s = $crate::alloc::boxed::Box::<str>::deserialize(deserializer)?;
                 Self::from_str(&s).map_err(::serde::de::Error::custom)
             }
         }
@@ -86,7 +106,7 @@ macro_rules! language_code {
             where
                 S: ::serde::Serializer,
             {
-                use ::alloc::string::ToString as _;
+                use $crate::alloc::string::ToString as _;
 
                 self.to_string().serialize(serializer)
             }
@@ -126,18 +146,18 @@ macro_rules! language_tag {
 
         //
         impl ::core::str::FromStr for $name {
-            type Err = ::alloc::boxed::Box::<str>;
+            type Err = $crate::error::LanguageTagParseError;
 
             fn from_str(s: &str) -> Result<Self, Self::Err> {
                 let language_code_s = s.chars().take_while(|x| x != &'-' && x != &'_')
-                                                .collect::<::alloc::string::String>();
+                                                .collect::<$crate::alloc::string::String>();
                 let language_code = language_code_s.parse::<$language_code_ty>()
-                                                    .map_err(|_| ::alloc::boxed::Box::<str>::from(alloc::format!("Invalid language_code [{}]", language_code_s)))?;
+                                                    .map_err(|_| $crate::error::LanguageTagParseError::InvalidLanguageCode(language_code_s.as_str().into()))?;
 
                 let country_code = if s.len() > language_code_s.len() + 1 {
                     let country_code_s = &s[language_code_s.len() + 1..];
                     let country_code = country_code_s.parse::<$country_code_ty>()
-                                                    .map_err(|_| ::alloc::boxed::Box::<str>::from(alloc::format!("Invalid country_code [{}]", country_code_s)))?;
+                                                    .map_err(|_| $crate::error::LanguageTagParseError::InvalidCountryCode(country_code_s.into()))?;
                     Some(country_code)
                 } else {
                     None
@@ -159,10 +179,28 @@ macro_rules! language_tag {
         }
 
         //
-        impl_partial_eq_str! { str, $name }
-        impl_partial_eq_str! { &'a str, $name }
-        impl_partial_eq_str! { ::alloc::borrow::Cow<'a, str>, $name }
-        impl_partial_eq_str! { ::alloc::string::String, $name }
+        impl ::core::cmp::PartialEq for $name {
+            fn eq(&self, other: &Self) -> bool {
+                $crate::alloc::format!("{}", self) == $crate::alloc::format!("{}", other)
+            }
+        }
+
+        impl ::core::cmp::Eq for $name {
+        }
+
+        //
+        impl_macros::impl_partial_eq_str_for_display! { str, $name }
+        impl_macros::impl_partial_eq_str_for_display! { &'a str, $name }
+        impl_macros::impl_partial_eq_str_for_display! { $crate::alloc::borrow::Cow<'a, str>, $name }
+        impl_macros::impl_partial_eq_str_for_display! { $crate::alloc::string::String, $name }
+
+        //
+        #[cfg(feature = "std")]
+        impl ::std::hash::Hash for $name {
+            fn hash<H: ::std::hash::Hasher>(&self, state: &mut H) {
+                $crate::alloc::format!("{}", self).hash(state);
+            }
+        }
 
         //
         #[cfg(feature = "serde")]
@@ -173,7 +211,7 @@ macro_rules! language_tag {
             {
                 use ::core::str::FromStr as _;
 
-                let s = ::alloc::boxed::Box::<str>::deserialize(deserializer)?;
+                let s = $crate::alloc::boxed::Box::<str>::deserialize(deserializer)?;
                 Self::from_str(&s).map_err(::serde::de::Error::custom)
             }
         }
@@ -185,7 +223,7 @@ macro_rules! language_tag {
             where
                 S: ::serde::Serializer,
             {
-                use ::alloc::string::ToString as _;
+                use $crate::alloc::string::ToString as _;
 
                 self.to_string().serialize(serializer)
             }
@@ -194,17 +232,7 @@ macro_rules! language_tag {
 }
 
 //
-#[macro_export]
-macro_rules! impl_partial_eq_str {
-    ($lhs:ty, $rhs: ty) => {
-        #[allow(unused_lifetimes)]
-        impl<'a> ::core::cmp::PartialEq<$lhs> for $rhs {
-            fn eq(&self, other: &$lhs) -> bool {
-                ::core::cmp::PartialEq::eq(&::alloc::format!("{}", self)[..], &other[..])
-            }
-        }
-    };
-}
+pub mod error;
 
 //
 pub mod iso639_1;
