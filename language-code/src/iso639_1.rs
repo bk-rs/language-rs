@@ -5,6 +5,7 @@ use country_code::iso3166_1::alpha_2::CountryCode;
 use crate::{language_code, language_tag};
 
 language_code! {
+    length = 2;
     #[derive(Debug, Clone)]
     #[allow(non_camel_case_types)]
     pub enum LanguageCode {
@@ -269,6 +270,9 @@ mod tests {
             assert_eq!(h.len(), 1);
         }
 
+        // Default
+        assert_eq!(LanguageCode::default(), LanguageCode::en);
+
         #[cfg(feature = "serde")]
         {
             #[derive(serde::Serialize, serde::Deserialize)]
@@ -329,6 +333,12 @@ mod tests {
             LanguageTag::new(LanguageCode::en, None)
         );
         assert_eq!(LanguageTag::new(LanguageCode::en, None), "en");
+
+        // Default
+        assert_eq!(
+            LanguageTag::default(),
+            LanguageTag::new(LanguageCode::en, None)
+        );
 
         #[cfg(feature = "serde")]
         {

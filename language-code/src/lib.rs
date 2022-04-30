@@ -6,6 +6,7 @@ pub extern crate alloc;
 #[macro_export]
 macro_rules! language_code {
     (
+        length = $length:tt;
         $( #[$meta:meta] )*
         $pub:vis enum $name:ident {
             $(
@@ -42,7 +43,7 @@ macro_rules! language_code {
                         $(
                             ::core::stringify!($variant) | ::core::stringify!([<$variant:upper>]) => Ok(Self::$variant),
                         )+
-                        s if s.len() == 2 => Ok(Self::Other(s.into())),
+                        s if s.len() == $length => Ok(Self::Other(s.into())),
                         s => Err($crate::error::ParseError::Invalid(s.into()))
                     }
                 }
