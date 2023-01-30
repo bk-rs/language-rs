@@ -22,7 +22,7 @@ std = ["country-code/std"]
 [dependencies]
 impl-macros = { version = "0.1.1", default-features = false, features = ["alloc"] }
 paste = { version = "1.0", default-features = false }
-country-code = { version = "0.2", default-features = false }
+country-code = { version = "0.3", default-features = false }
 serde = { version = "1.0", default-features = false, features = ["alloc"], optional = true }
 
 [dev-dependencies]
