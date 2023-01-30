@@ -1,13 +1,11 @@
-use core::fmt;
-
 //
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseError {
     Invalid(::alloc::boxed::Box<str>),
 }
 
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl core::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{self:?}")
     }
 }
@@ -22,8 +20,8 @@ pub enum LanguageTagParseError {
     CountryCodeInvalid(::alloc::boxed::Box<str>),
 }
 
-impl fmt::Display for LanguageTagParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl core::fmt::Display for LanguageTagParseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{self:?}")
     }
 }
